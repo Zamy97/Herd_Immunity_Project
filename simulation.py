@@ -81,6 +81,7 @@ class Simulation(object):
         self.virus_name = virus_name
         self.mortality_rate = mortality_rate
         self.basic_repro_num = basic_repro_num
+        self.total_dead = 0
         self.file_name = "{}_simulation_pop_{}_vp_{}_infected_{}.txt".format(
             virus_name, population_size, vacc_percentage, initial_infected)
 
@@ -147,10 +148,19 @@ class Simulation(object):
         #     - There are no infected people left in the population.
         # In all other instances, the simulation should continue.
 
-        # should_continue = True
-        # if self.population_size == 0
-        #
-        pass
+        for person in self.population_size:
+            if person.is_alive and person.infected != None:
+                did_person_survive = person.did_survive_infection()
+                if not did_person_survive:
+                    self.total_dead +=1
+
+        if self.population_size == self.total_dead:
+            return False
+        elif self.current_infected == self.total_dead:
+            return False
+        else:
+            return True
+
 
     def run(self):
         # TODO: Finish this method.  This method should run the simulation until
@@ -191,9 +201,41 @@ class Simulation(object):
             #               - Call simulation.interaction(person, random_person)
             #               - Increment interaction counter by 1.
 
-        for person_infected in total_infected:
-            random = self.newly_infected
-            self.interaction(person_infected, )
+        # total_interaction = 0
+        #
+        # for person_infected in total_infected:
+        #     while total_interactions < 100 :
+        #         random = random.choice(self.population)
+        #         if random.is_alive:
+        #             self.interaction(person_infected, random)
+        #             total_interaction += 1
+        #         else:
+        #
+        #
+                people_interacted = []
+
+        for person in self.population:
+            if person.is_alive and person.infected != None:
+                random_person_index = 0
+                interaction_counter = 0
+                interaction_limit = 0
+                keep_interacting = True
+
+                if self.population_size - self.current_infected  < 100:
+                    interaction_limit = self.population_size - self.current_infected - self.total_dead
+                else:
+                    interaction_limit = 100
+
+                while keep_interacting:
+                    if len(people_interacted) == interaction_limit:
+                        keep_interacting = False
+                    else:
+                        random_person = random.choice(self.population)
+                        if person._id != random_person._id and random_person.is_alive and random_person._id not in people_interacted:
+                            self.interaction(person, random_person)
+                            people_interacted.append(random_person._id)
+        self._infect_newly_infected()
+
 
     def interaction(self, person, random_person):
         # TODO: Finish this method! This method should be called any time two living
@@ -236,8 +278,20 @@ class Simulation(object):
         #   - Set this Person's .infected attribute to True.
         # NOTE: Once you have iterated through the entire list of self.newly_infected, remember
         # to reset self.newly_infected back to an empty list!
-        # for person in self.newly_infected:
-        #     person._id
+        self.current_infected += len(self.newly_infected)
+
+        self.logger.log_file.write('{} Newly Infected People In The Population\n'.format(self.current_infected))
+
+        for person in self.population:
+            if person._id in self.newly_infected:
+                person.infected = self.virus
+        self.newly_infected.clear()
+
+    def _is_everyone_infected():
+        for person in self.population():
+            if person.infected != None:
+                return False
+        return True
 
 if __name__ == "__main__":
     params = sys.argv[1:]
